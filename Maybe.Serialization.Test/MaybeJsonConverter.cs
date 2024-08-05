@@ -106,7 +106,7 @@ public class MaybeJsonConverter
     }
 
     [Fact]
-    public void ObjString_Maybe()
+    public void Serialize_NormalObjectWithMaybeJsonConverterInConverters_ShouldWorkAsExpected()
     {
         var jsonString = "{\"name\":\"João\",\"age\":20,\"height\":2.3,\"sad\":false}";
         var normalObject = new NormalObject()
@@ -123,24 +123,7 @@ public class MaybeJsonConverter
     }
 
     [Fact]
-    public void ListObjString_Maybe()
-    {
-        var jsonString = "{\"name\":\"João\",\"age\":20,\"height\":2.3,\"sad\":false}";
-        var normalObject = new NormalObject()
-        {
-            Name = "João",
-            Age = 20,
-            Height = 2.3,
-            Sad = false
-        };
-
-        var result = JsonSerializer.Serialize(normalObject, _serializerOptions);
-
-        result.Should().Be(jsonString);
-    }
-
-    [Fact]
-    public void String_Maybe()
+    public void Serialize_NormalObjectToMaybe_ShouldWorkAsExpected()
     {
         var jsonString = "{\"name\":\"João\",\"age\":20,\"height\":2.3,\"sad\":false}";
         var maybeValue = new NormalObject()
@@ -157,41 +140,7 @@ public class MaybeJsonConverter
     }
 
     [Fact]
-    public void Boolean_Maybe()
-    {
-        var jsonString = "{\"name\":\"João\",\"age\":20,\"height\":2.3,\"sad\":false}";
-        var maybeValue = new NormalObject()
-        {
-            Name = "João",
-            Age = 20,
-            Height = 2.3,
-            Sad = false
-        }.ToMaybe();
-
-        var result = JsonSerializer.Serialize(maybeValue, _serializerOptions);
-
-        result.Should().Be(jsonString);
-    }
-
-    [Fact]
-    public void Decimal_Maybe()
-    {
-        var jsonString = "{\"name\":\"João\",\"age\":20,\"height\":2.3,\"sad\":false}";
-        var maybeValue = new NormalObject()
-        {
-            Name = "João",
-            Age = 20,
-            Height = 2.3,
-            Sad = false
-        }.ToMaybe();
-
-        var result = JsonSerializer.Serialize(maybeValue, _serializerOptions);
-
-        result.Should().Be(jsonString);
-    }
-
-    [Fact]
-    public void Test1()
+    public void Serialize_NormalObjectNestedWithMaybeToMaybe_ShouldWorkAsExpected()
     {
         var jsonString =
             "{\"field\":{\"name\":\"Martins\",\"age\":10,\"height\":1.2,\"sad\":true}}";
@@ -203,7 +152,7 @@ public class MaybeJsonConverter
                 Age = 10,
                 Height = 1.2,
                 Sad = true,
-            }
+            }.ToMaybe(),
         }.ToMaybe();
 
         var result = JsonSerializer.Serialize(maybeValue, _serializerOptions);
@@ -211,9 +160,8 @@ public class MaybeJsonConverter
         result.Should().Be(jsonString);
     }
 
-
     [Fact]
-    public void TestNullInside()
+    public void Serialize_NormalObjectNestedWithMaybeNothingToMaybe_ShouldSerializeNullInNestedField()
     {
         var jsonString = "{\"field\":null}";
 
@@ -228,7 +176,7 @@ public class MaybeJsonConverter
     }
 
     [Fact]
-    public void TestNullInsideFields()
+    public void Serialize_NormalObjectWithNothingFieldsToMaybe_ShouldSerializeNullInFields()
     {
         var jsonString =
             "{\"name\":null,\"age\":null}";
@@ -245,17 +193,7 @@ public class MaybeJsonConverter
     }
 
     [Fact]
-    public void Integer_Maybes()
-    {
-        var jsonString = "null";
-        var result = JsonSerializer.Deserialize<Maybe<int>>(jsonString, _serializerOptions);
-
-        result.Should().Be(Maybe<int>.Nothing);
-        result.HasValue.Should().BeFalse();
-    }
-
-    [Fact]
-    public void Integer_MaybesList()
+    public void Serialize_NormalObjectWithMaybeFieldNothing_ShouldSerializeFieldWithNull()
     {
         var mock = new NormalObjectNestedMaybeListMaybe()
         {
@@ -271,7 +209,7 @@ public class MaybeJsonConverter
     }
 
     [Fact]
-    public void Integer_MaybesMaybeList()
+    public void Serialize_NormalObjectWithMaybeFieldListOfMaybes_ShouldSerializeFieldListWithExpectedValues()
     {
         var mockNormalObject = _fixture.Create<NormalObject>();
         var mockNormalObjectString = JsonSerializer.Serialize(mockNormalObject, _serializerOptions);
@@ -284,6 +222,126 @@ public class MaybeJsonConverter
         var result = JsonSerializer.Serialize(mock, _serializerOptions);
 
         result.Should().Be(jsonString);
+    }
+
+    // QQQ
+    [Fact]
+    public void Deserialize_NormalObjectWithMaybeJsonConverterInConverters_ShouldWorkAsExpected()
+    {
+        var jsonString = "{\"name\":\"João\",\"age\":20,\"height\":2.3,\"sad\":false}";
+        var normalObject = new NormalObject()
+        {
+            Name = "João",
+            Age = 20,
+            Height = 2.3,
+            Sad = false,
+        };
+
+        var result = JsonSerializer.Deserialize<NormalObject>(jsonString, _serializerOptions);
+
+        result.Should().BeEquivalentTo(normalObject);
+    }
+
+    [Fact]
+    public void Deserialize_NormalObjectToMaybe_ShouldWorkAsExpected()
+    {
+        var jsonString = "{\"name\":\"João\",\"age\":20,\"height\":2.3,\"sad\":false}";
+        var maybeValue = new NormalObject()
+        {
+            Name = "João",
+            Age = 20,
+            Height = 2.3,
+            Sad = false
+        }.ToMaybe();
+
+        var result = JsonSerializer.Deserialize<Maybe<NormalObject>>(jsonString, _serializerOptions);
+
+        result.Should().BeEquivalentTo(maybeValue, options => options.ComparingByMembers<Maybe<NormalObject>>());
+    }
+
+    [Fact]
+    public void Deserialize_NormalObjectNestedWithMaybeToMaybe_ShouldWorkAsExpected()
+    {
+        var jsonString =
+            "{\"field\":{\"name\":\"Martins\",\"age\":10,\"height\":1.2,\"sad\":true}}";
+        var maybeValue = new NormalObjectNestedMaybe()
+        {
+            Field = new NormalObject()
+            {
+                Name = "Martins",
+                Age = 10,
+                Height = 1.2,
+                Sad = true,
+            }.ToMaybe(),
+        }.ToMaybe();
+
+        var result = JsonSerializer.Deserialize<Maybe<NormalObjectNestedMaybe>>(jsonString, _serializerOptions);
+
+        result.Should().BeEquivalentTo(maybeValue, options =>
+            options
+                .ComparingByMembers<Maybe<NormalObjectNestedMaybe>>()
+                .ComparingByMembers<Maybe<NormalObject>>()
+        );
+    }
+
+    [Fact]
+    public void Deserialize_NormalObjectNestedWithMaybeNothingToMaybe_ShouldSerializeNullInNestedField()
+    {
+        var jsonString = "{\"field\":null}";
+
+        var maybeValue = new NormalObjectNestedMaybe()
+        {
+            Field = Maybe<NormalObject>.Nothing,
+        }.ToMaybe();
+
+        var result = JsonSerializer.Deserialize<Maybe<NormalObjectNestedMaybe>>(jsonString, _serializerOptions);
+
+        result.Should().BeEquivalentTo(maybeValue, options => options.ComparingByMembers<Maybe<NormalObjectNestedMaybe>>());
+    }
+
+    [Fact]
+    public void Deserialize_NormalObjectWithNothingFieldsToMaybe_ShouldSerializeNullInFields()
+    {
+        var jsonString =
+            "{\"name\":null,\"age\":null}";
+
+        var maybeValue = new NullField()
+        {
+            Name = Maybe<string>.Nothing,
+            Age = Maybe<int>.Nothing,
+        }.ToMaybe();
+
+        var result = JsonSerializer.Deserialize<Maybe<NullField>>(jsonString, _serializerOptions);
+
+        result.Should().BeEquivalentTo(maybeValue, options => options.ComparingByMembers<Maybe<NullField>>());
+    }
+
+    [Fact]
+    public void Deserialize_NormalObjectWithMaybeFieldNothing_ShouldSerializeFieldWithNull()
+    {
+        var mock = new NormalObjectNestedMaybeListMaybe()
+        {
+            Field = Maybe<List<Maybe<NormalObject>>>.Nothing,
+        };
+
+        var jsonString = "{\"field\":null}";
+
+        var result = JsonSerializer.Deserialize<NormalObjectNestedMaybeListMaybe>(jsonString, _serializerOptions);
+
+        result.Should().BeEquivalentTo(mock);
+    }
+
+    [Fact]
+    public void Deserialize_NormalObjectWithMaybeFieldListOfMaybes_ShouldSerializeFieldListWithExpectedValues()
+    {
+        var mockNormalObject = _fixture.Create<NormalObject>();
+        var mockNormalObjectString = JsonSerializer.Serialize(mockNormalObject, _serializerOptions);
+        var jsonString = string.Concat("{\"field\":[null,", mockNormalObjectString, "]}");
+        var result = JsonSerializer.Deserialize<NormalObjectNestedListMaybe>(jsonString, _serializerOptions);
+
+        result!.Field[0].HasValue.Should().BeFalse();
+        result.Field[1].HasValue.Should().BeTrue();
+        result.Field[1].Value.Should().BeEquivalentTo(mockNormalObject);
     }
 }
 
